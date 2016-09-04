@@ -21,50 +21,48 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.mysql.packet;
+package io.mycat.backend;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 
-import io.mycat.util.BufferUtil;
-import io.mycat.util.StreamUtil;
-
+import io.mycat.net2.ConDataBuffer;
+import io.mycat.net2.ConnectionException;
 /**
- * @author mycat
+ * 后端数据库的事件处理回调接口
+ * @author wuzhihui
+ *
  */
-public class Reply323Packet extends MySQLPacket {
+public interface BackConnectionCallback<T extends BackendConnection> {
 
-    public byte[] seed;
+    /**
+     * 无法获取连接
+     * 
+     * @param e
+     * @param conn
+     */
+     void connectionError(ConnectionException e, T conn);
 
-    public void write(OutputStream out) throws IOException {
-        StreamUtil.writeUB3(out, calcPacketSize());
-        StreamUtil.write(out, packetId);
-        if (seed == null) {
-            StreamUtil.write(out, (byte) 0);
-        } else {
-            StreamUtil.writeWithNull(out, seed);
-        }
-    }
+    /**
+     * 已获得有效连接的响应处理
+     */
+    void connectionAcquired(T conn);
 
-    public void write(ByteBuffer  buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        if (seed == null) {
-            buffer.put((byte) 0);
-        } else {
-            BufferUtil.writeWithNull(buffer, seed);
-        }
-    }
+    /**
+     * 收到数据包的响应处理
+     */
+    void handleResponse(T conn,ConDataBuffer dataBuffer,byte packageType,int pkgStartPos,int pkgLen) throws IOException ;
 
-    @Override
-    public int calcPacketSize() {
-        return seed == null ? 1 : seed.length + 1;
-    }
-
-    @Override
-    protected String getPacketInfo() {
-        return "MySQL Auth323 Packet";
-    }
+    /**
+     * on connetion close event
+     */
+    void connectionClose(T conn, String reason);
+    
+    /**
+     * 处理数据的过程中发生错误
+     * @param e
+     * @param conn
+     */
+    void handlerError(Exception e,T conn);
+ 
 
 }

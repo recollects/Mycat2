@@ -23,28 +23,29 @@
  */
 package io.mycat.net2.mysql.handler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
 
 import io.mycat.mysql.MySQLConnection;
-import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.mysql.util.ParseUtil;
 import io.mycat.net2.mysql.parser.ServerParseSelect;
-import io.mycat.net2.mysql.response.FakeResultSet;
-import io.mycat.net2.mysql.response.SelectVersionComment;
+import io.mycat.util.ParseUtil;
 
 /**
  * @author mycat
  */
 public final class SelectHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SelectHandler.class);
-
-    public static void handle(String stmt, MySQLConnection c, int offs) {
+	/**
+	 * 
+	 * @param stmt
+	 * @param c
+	 * @param offs
+	 * @throws IOException
+	 */
+    public static void handle(String stmt, MySQLConnection c, int offs) throws IOException {
         int offset = offs;
         switch (ServerParseSelect.parse(stmt, offs)) {
         case ServerParseSelect.VERSION_COMMENT:
-            SelectVersionComment.response(c);
+            //SelectVersionComment.response(c);
             break;
         case ServerParseSelect.DATABASE:
             // SelectDatabase.response(c);

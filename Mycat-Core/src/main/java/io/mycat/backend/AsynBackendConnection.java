@@ -21,16 +21,8 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.engine;
+package io.mycat.backend;
 
-/**
- * front user connection
- * @author wuzhihui
- *
- */
-public interface FrontConnection {
+public interface AsynBackendConnection {
 
-	
-	UserSession<? extends FrontConnection> getSession();
-	
 }

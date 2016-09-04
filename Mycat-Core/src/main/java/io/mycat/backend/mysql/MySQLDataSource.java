@@ -21,50 +21,31 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.mysql.packet;
+package io.mycat.backend.mysql;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 
-import io.mycat.util.BufferUtil;
-import io.mycat.util.StreamUtil;
+import io.mycat.backend.BackendConnection;
+import io.mycat.backend.DHSource;
+import io.mycat.beans.DataHostConfig;
 
 /**
  * @author mycat
  */
-public class Reply323Packet extends MySQLPacket {
+public class MySQLDataSource extends DHSource {
 
-    public byte[] seed;
+    private final MySQLBackendConnectionFactory factory;
 
-    public void write(OutputStream out) throws IOException {
-        StreamUtil.writeUB3(out, calcPacketSize());
-        StreamUtil.write(out, packetId);
-        if (seed == null) {
-            StreamUtil.write(out, (byte) 0);
-        } else {
-            StreamUtil.writeWithNull(out, seed);
-        }
-    }
+    public MySQLDataSource(MySQLBackendConnectionFactory factory,DataHostConfig config) {
+        super(config);
+        this.factory=factory;
+       
 
-    public void write(ByteBuffer  buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        if (seed == null) {
-            buffer.put((byte) 0);
-        } else {
-            BufferUtil.writeWithNull(buffer, seed);
-        }
     }
 
     @Override
-    public int calcPacketSize() {
-        return seed == null ? 1 : seed.length + 1;
-    }
-
-    @Override
-    protected String getPacketInfo() {
-        return "MySQL Auth323 Packet";
+    public BackendConnection createNewConnectionOnReactor(String reactor,String schema) throws IOException {
+        return factory.make(this, reactor,schema);
     }
 
 }
