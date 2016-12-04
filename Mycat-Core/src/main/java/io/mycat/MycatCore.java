@@ -25,17 +25,19 @@
 package io.mycat;
  
 import java.io.IOException;
+import java.net.URL;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.backend.DHSource;
-import io.mycat.backend.mysql.MySQLBackendConnectionFactory;
-import io.mycat.backend.mysql.MySQLDataSource;
-import io.mycat.backend.mysql.MySQLMSReplicatSet;
-import io.mycat.beans.DataHostConfig;
-import io.mycat.mysql.DefaultSQLCommandHandler;
-import io.mycat.mysql.MySQLFrontendConnectionFactory;
+import io.mycat.backend.MySQLBackendConnectionFactory;
+import io.mycat.backend.MySQLReplicatSet;
+import io.mycat.beans.MySQLRepBean;
+import io.mycat.beans.SchemaBean;
+import io.mycat.engine.impl.NormalSchemaSQLCommandHandler;
+import io.mycat.engine.impl.PartionSchemaSQLCommandHandler;
+import io.mycat.front.MySQLFrontendConnectionFactory;
 import io.mycat.net2.ExecutorUtil;
 import io.mycat.net2.NIOAcceptor;
 import io.mycat.net2.NIOConnector;
@@ -63,18 +65,11 @@ public class MycatCore {
        
     }
 
-    private void init()
-    {
-    	
-         
-    }
     public static void main(String[] args) throws IOException {
         // Business Executor ，用来执行那些耗时的任务
         NameableExecutor businessExecutor = ExecutorUtil.create("BusinessExecutor", 10);
         // 定时器Executor，用来执行定时任务
         NamebleScheduledExecutor timerExecutor = ExecutorUtil.createSheduledExecute("Timer", 5);
-
-        
         SharedBufferPool sharedPool = new SharedBufferPool(1024 * 1024 * 100, 1024);
         new NetSystem(sharedPool, businessExecutor, timerExecutor);
         // Reactor pool
@@ -83,7 +78,9 @@ public class MycatCore {
         NIOConnector connector = new NIOConnector("NIOConnector", reactorPool);
         connector.start();
         NetSystem.getInstance().setConnector(connector);
-        NetSystem.getInstance().setNetConfig(new SystemConfig());
+        final SystemConfig sysconfig = new SystemConfig();
+        sysconfig.setTraceProtocol(true);
+        NetSystem.getInstance().setNetConfig(sysconfig);
         MySQLBackendConnectionFactory bakcMySQLFactory=new MySQLBackendConnectionFactory();
         SQLEngineCtx.INSTANCE().setBackendMySQLConFactory(bakcMySQLFactory);
         MySQLFrontendConnectionFactory frontFactory = new MySQLFrontendConnectionFactory();
@@ -92,13 +89,22 @@ public class MycatCore {
         // server started
         
         LOGGER.info(server.getName() + " is started and listening on " + server.getPort());
-        DefaultSQLCommandHandler defaultCmdHandler=new DefaultSQLCommandHandler();
-    	SQLEngineCtx.INSTANCE().setDefaultMySQLCmdHandler(defaultCmdHandler);
-    	
-        DataHostConfig config = new  DataHostConfig("host1", "127.0.0.1", 3306,  "root", "123456","mysql");
-        config.setMaxCon(10);
-        DataHostConfig[] configs={config};
-        MySQLMSReplicatSet mysqlRepSet=new MySQLMSReplicatSet("mysql1",configs);
-        SQLEngineCtx.INSTANCE().addDHReplicatSet(mysqlRepSet);
+        NormalSchemaSQLCommandHandler normalSchemaSQLCmdHandler=new NormalSchemaSQLCommandHandler();
+    	SQLEngineCtx.INSTANCE().setNormalSchemaSQLCmdHandler(normalSchemaSQLCmdHandler);
+    	PartionSchemaSQLCommandHandler partionSchemaSQLCmdHandler=new PartionSchemaSQLCommandHandler();
+    	SQLEngineCtx.INSTANCE().setPartionSchemaSQLCmdHandler(partionSchemaSQLCmdHandler);
+    	URL datasourceURL = ConfigLoader.class.getResource("/datasource.xml");
+    	List<MySQLRepBean> mysqlRepBeans = ConfigLoader.loadMySQLRepBean(datasourceURL.toString());
+        for(final MySQLRepBean repBean : mysqlRepBeans)
+        {
+        	MySQLReplicatSet mysqlRepSet = new MySQLReplicatSet(repBean,0);
+            SQLEngineCtx.INSTANCE().addMySQLReplicatSet(mysqlRepSet);	
+        }
+        URL schemaURL=ConfigLoader.class.getResource("/schema.xml");
+        List<SchemaBean>  schemaBeans=ConfigLoader.loadSheamBeans(schemaURL.toString());
+        for(SchemaBean schemaBean:schemaBeans)
+        {
+        	SQLEngineCtx.INSTANCE().addSchemaBean(schemaBean);
+        }
     }
 }

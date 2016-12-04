@@ -32,18 +32,25 @@ import java.io.IOException;
  * @author mycat
  */
 public final class SystemConfig {
-	public static  String SYS_HOME = "MYCAT_HOME";
+	
 	public static final int DEFAULT_PROCESSORS = Runtime.getRuntime().availableProcessors();
+	public static final String SYS_HOME = "MYCAT_HOME";
+	
+	private int conIdleTimeout		= 30;
 	private int frontSocketSoRcvbuf = 1024 * 1024;
 	private int frontSocketSoSndbuf = 4 * 1024 * 1024;
-	private int backSocketSoRcvbuf = 4 * 1024 * 1024;// mysql 5.6
+	private int backSocketSoRcvbuf  = 4 * 1024 * 1024;	// mysql 5.6
 														// net_buffer_length
 														// defaut 4M
 	private int backSocketSoSndbuf = 1024 * 1024;
 	private int frontSocketNoDelay = 1; // 0=false
-	private int backSocketNoDelay = 1; // 1=true
+	private int backSocketNoDelay  = 1; // 1=true
 
-
+	// a switch: trace frontend & backend network protocol
+	// @author little-pan
+	// @since 2016-09-29
+	private boolean traceProtocol;
+	
 	public SystemConfig() {
 
 	}
@@ -81,6 +88,14 @@ public final class SystemConfig {
 		}
 
 		return home;
+	}
+
+	public int getConIdleTimeout() {
+		return conIdleTimeout;
+	}
+
+	public void setConIdleTimeout(int conIdleTimeout) {
+		this.conIdleTimeout = conIdleTimeout;
 	}
 
 	public int getFrontsocketsorcvbuf() {
@@ -146,6 +161,14 @@ public final class SystemConfig {
 
 	public void setBackSocketNoDelay(int backSocketNoDelay) {
 		this.backSocketNoDelay = backSocketNoDelay;
+	}
+	
+	public boolean isTraceProtocol() {
+		return traceProtocol;
+	}
+
+	public void setTraceProtocol(boolean traceProtocol) {
+		this.traceProtocol = traceProtocol;
 	}
 
 }

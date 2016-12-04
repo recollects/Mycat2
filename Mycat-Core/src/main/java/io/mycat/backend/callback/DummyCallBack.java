@@ -21,66 +21,56 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.engine;
+package io.mycat.backend.callback;
 
-import java.util.ArrayList;
+import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.backend.BackConnectionCallback;
 import io.mycat.backend.MySQLBackendConnection;
-
+import io.mycat.net2.ConDataBuffer;
+import io.mycat.net2.ConnectionException;
 /**
- * user session ,mean's a mysql client session or pg client session
+ * callback witch do nothing 
  * @author wuzhihui
  *
  */
-public class UserSession  {
-	 private static final Logger LOGGER = LoggerFactory.getLogger(UserSession.class);	
-private SQLCommandHandler curCmdHandler;	
-private ArrayList<MySQLBackendConnection> backConLst=new  ArrayList<MySQLBackendConnection>();
-public void changeCmdHandler(SQLCommandHandler newCmdHandler)
-{
+public class DummyCallBack  implements BackConnectionCallback{
+	 private static final Logger LOGGER = LoggerFactory.getLogger(DummyCallBack.class);
+	 
+	 
+	@Override
+	public void handleResponse(MySQLBackendConnection source, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos,
+			int pkgLen) throws IOException {
+		LOGGER.warn("rereived not processed response  "+source);
+		
+	}
 	
-	this.curCmdHandler=newCmdHandler;
-}
 
-public SQLCommandHandler getCurCmdHandler() {
-	return curCmdHandler;
-}
-
-
-
-
-public void removeBackCon(MySQLBackendConnection con)
-{
-	 if(this.backConLst.remove(con))
-	 {
-		 LOGGER.warn("remove back con ,but not found ! "+this); 
-	 }
+	@Override
+	public void connectionError(ConnectionException e, MySQLBackendConnection conn) {
+		LOGGER.warn("connection error "+conn,e);
+		
+	}
+	@Override
+	public void connectionAcquired(MySQLBackendConnection conn) {
+		LOGGER.info("connection acquired "+conn);
 		 
-	   
-}
-
-public void addBackCon(MySQLBackendConnection con)
-{
-	 if(this.backConLst.contains(con))
-	 {
-		 throw new RuntimeException("add a duplicate back connection to session,schema: "+con.getSchema());
-	 }else
-	 {
-		 backConLst.add(con);
-	 }
-		   
-			   
-}
-
-public  ArrayList<MySQLBackendConnection> getBackendCons() {
-	return backConLst;
-}
-
-
-	
-	
+		
+	}
+	@Override
+	public void connectionClose(MySQLBackendConnection conn, String reason) {
+		LOGGER.info("connection closed ,reason:"+reason+ "  "+conn);
+		 
+		
+	}
+	@Override
+	public void handlerError(Exception e, MySQLBackendConnection conn) {
+		LOGGER.warn("hanlder error "+conn,e);
+		 
+		
+	}
 
 }

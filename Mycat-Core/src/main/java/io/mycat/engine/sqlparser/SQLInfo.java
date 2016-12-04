@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, OpenCloudDB/MyCAT and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, OpenCloudDB/MyCAT and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software;Designed and Developed mainly by many Chinese
@@ -21,27 +21,39 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.engine;
-
-import java.io.IOException;
-
-import io.mycat.front.MySQLFrontConnection;
-import io.mycat.net2.ConDataBuffer;
+package io.mycat.engine.sqlparser;
 
 /**
- * internal used for process sql command
- *  @author wuzhihui
+ * 存放SQL解析的结果，重复使用
+ * 
+ * @author wuzhihui
  *
  */
-public interface SQLCommandHandler {
+public class SQLInfo {
 	/**
-	 * response received data 
-	 * @param con
-	 * @param dataBuffer
-	 * @param packageType
-	 * @param pkgStartPos
-	 * @param pkgLen
-	 * @throws IOException
+	 * 上次解析的位置
 	 */
-	 public void processCmd(MySQLFrontConnection  frontCon, ConDataBuffer dataBuffer,byte packageType,int pkgStartPos,int pkgLen) throws IOException;
+	private int parsePos;
+	private String db;
+
+	public SQLInfo() {
+
+	}
+
+	public int getParsePos() {
+		return parsePos;
+	}
+
+	public void setParsePos(int parsePos) {
+		this.parsePos = parsePos;
+	}
+
+	public String getDb() {
+		return db;
+	}
+
+	public void setDb(String db) {
+		this.db = db;
+	}
+
 }
